@@ -8,4 +8,4 @@ playwright
 python-dotenv
 httpx
 psycopg2-binary
-psycopg2旋v2旋
+psycopg2
