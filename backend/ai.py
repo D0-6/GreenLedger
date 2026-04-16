@@ -3,7 +3,6 @@ import json
 import asyncio
 import hashlib
 from openai import AsyncOpenAI
-from langchain_core.prompts import PromptTemplate
 from duckduckgo_search import DDGS
 from dotenv import load_dotenv
 
