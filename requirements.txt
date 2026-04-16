@@ -9,4 +9,4 @@ python-dotenv
 httpx
 psycopg2-binary
 psycopg2
-duckduckgo-search旋v2旋
+duckduckgo-search
