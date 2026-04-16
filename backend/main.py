@@ -23,8 +23,12 @@ app.add_middleware(
 )
 
 @app.on_event("startup")
-def startup_db():
-    db.init_db()
+async def startup_event():
+    try:
+        db.init_db()
+        print("✅ Database initialized successfully.")
+    except Exception as e:
+        print(f"⚠️ Database initialization skipped/failed (will retry on first request): {e}")
 
 @app.get("/")
 def read_root():
