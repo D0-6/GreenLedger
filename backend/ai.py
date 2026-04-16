@@ -8,13 +8,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# NVIDIA NIM Configuration (Llama 4 Maverick)
+# NVIDIA NIM Configuration (Llama 3.1)
 NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY")
 client = AsyncOpenAI(
     base_url="https://integrate.api.nvidia.com/v1",
     api_key=NVIDIA_API_KEY
 )
-LLM_MODEL = "meta/llama-4-maverick-17b-128e-instruct"
+LLM_MODEL = "meta/llama-3.1-70b-instruct"
 
 # ... (Search logic remains identical for stability)
 def generate_optimized_queries(claim: str):
@@ -33,9 +33,9 @@ def live_search_sync(query: str, max_results=4):
         return []
 
 async def analyze_claim_stream(claim: str, pdf_text: str = None):
-    """Async Generator version using Llama 4 Maverick on NVIDIA NIM."""
+    """Async Generator version using Llama 3.1 on NVIDIA NIM."""
     try:
-        provider_name = "NVIDIA Llama 4 Maverick"
+        provider_name = "NVIDIA Llama 3.1"
         yield json.dumps({"type": "trace", "message": f"Establishing secure G7 telemetry tunnel ({provider_name})..."}) + "\n"
         await asyncio.sleep(0.1)
         
