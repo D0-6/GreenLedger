@@ -1,0 +1,11 @@
+fastapi
+openai
+python-multipart
+pypdf
+jinja2
+python-dotenv
+httpx
+psycopg2-binary
+duckduckgo-search
+python-docx
+matplotlib
