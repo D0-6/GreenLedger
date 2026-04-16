@@ -1,0 +1,20 @@
+{
+  "USA": { "carbonBalance": -4800, "auditGrade": "B-", "source": "EPA/UNFCCC 2024", "lastAudit": "2024-12-15" },
+  "CHN": { "carbonBalance": -10500, "auditGrade": "C", "source": "WRI Global Carbon Budget", "lastAudit": "2025-01-10" },
+  "COL": { "carbonBalance": 142, "auditGrade": "A+", "source": "ASOCARBONO Registry", "lastAudit": "2024-11-20" },
+  "BRA": { "carbonBalance": -450, "auditGrade": "B", "source": "SEEG Brazil", "lastAudit": "2024-10-05" },
+  "BTN": { "carbonBalance": 6, "auditGrade": "A+", "source": "UNFCCC NC4", "lastAudit": "2024-09-12" },
+  "IND": { "carbonBalance": -3200, "auditGrade": "B", "source": "BEE / Ministry of Power", "lastAudit": "2024-12-01" },
+  "PAN": { "carbonBalance": 12, "auditGrade": "A+", "source": "MiAmbiente Carbono-Cero", "lastAudit": "2025-01-05" },
+  "DEU": { "carbonBalance": -630, "auditGrade": "A", "source": "UBA Emissions Inventory", "lastAudit": "2024-12-20" },
+  "GBR": { "carbonBalance": -410, "auditGrade": "A", "source": "DESNZ Statistics", "lastAudit": "2024-11-15" },
+  "FRA": { "carbonBalance": -380, "auditGrade": "A", "source": "CITEPA / SNBC", "lastAudit": "2025-01-15" },
+  "CAN": { "carbonBalance": -670, "auditGrade": "B", "source": "Environment Canada", "lastAudit": "2024-12-10" },
+  "AUS": { "carbonBalance": -520, "auditGrade": "B-", "source": "Clean Energy Regulator", "lastAudit": "2024-10-30" },
+  "JPN": { "carbonBalance": -1080, "auditGrade": "A-", "source": "MOE Japan", "lastAudit": "2024-12-05" },
+  "NOR": { "carbonBalance": 25, "auditGrade": "A+", "source": "Statistisk sentralbyrå", "lastAudit": "2024-09-25" },
+  "ZAF": { "carbonBalance": -440, "auditGrade": "C+", "source": "DFFE South Africa", "lastAudit": "2024-08-18" },
+  "SAU": { "carbonBalance": -620, "auditGrade": "B-", "source": "KAPSARC", "lastAudit": "2024-11-12" },
+  "RUS": { "carbonBalance": -1900, "auditGrade": "C-", "source": "Rosgidromet", "lastAudit": "2024-07-22" },
+  "IDN": { "carbonBalance": -580, "auditGrade": "B", "source": "KLHK Indonesia", "lastAudit": "2024-12-28" }
+}

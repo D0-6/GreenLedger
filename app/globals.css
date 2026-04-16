@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@theme {
+  /* Core Semantic Mappings */
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
+  --color-outline: var(--outline);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-bright: var(--surface-bright);
+  --color-error: var(--error);
+  --color-on-error: var(--on-error);
+
+  /* Legacy / Fixed colors */
+  --color-primary-fixed-dim: #00dbe7;
+  --font-headline: 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-label: 'Inter', sans-serif;
+}
+
+/* 🌑 Dark Mode (Default) */
+:root {
+  --background: #111318;
+  --surface: #1e2024;
+  --surface-container-high: #282a2e;
+  --surface-bright: #37393e;
+  --on-surface: #e2e2e8;
+  --on-surface-variant: #b9cacb;
+  --outline: #849495;
+  --primary: #00dbe7;
+  --on-primary: #002022;
+  --error: #ffb4ab;
+  --on-error: #690005;
+}
+
+/* ☀️ Light Mode Override */
+[data-theme='light'] {
+  --background: #f8fafc;
+  --surface: #ffffff;
+  --surface-container-high: #f1f5f9;
+  --surface-bright: #e2e8f0;
+  --on-surface: #0f172a;
+  --on-surface-variant: #64748b;
+  --outline: #cbd5e1;
+  --primary: #0ea5e9;
+  --on-primary: #ffffff;
+  --error: #ba1a1a;
+  --on-error: #ffffff;
+}
+
+@layer base {
+    body { 
+        font-family: var(--font-body); 
+        background-color: var(--color-background); 
+        color: var(--color-on-surface); 
+        transition: background-color 0.4s ease, color 0.4s ease;
+        overflow: hidden; 
+        -webkit-font-smoothing: antialiased;
+    }
+}
+
+@layer components {
+    .glass-effect { 
+        backdrop-filter: blur(20px); 
+        -webkit-backdrop-filter: blur(20px); 
+        background-color: transparent; /* Color is handled by the surface bg */
+    }
+    
+    .material-symbols-outlined { 
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; 
+    }
+    
+    .neon-glow { 
+        text-shadow: 0 0 10px rgba(0, 219, 231, 0.3); 
+    }
+    
+    .globe-container { 
+        perspective: 1000px; 
+    }
+    
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+}
