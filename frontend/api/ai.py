@@ -33,12 +33,16 @@ def live_search_sync(query: str, max_results=4):
         return []
 
 async def analyze_claim_stream(claim: str, pdf_text: str = None):
-    """Async Generator version using Llama 3.1 on NVIDIA NIM."""
+    """Async Generator version optimized for Vercel 10s timeouts."""
     try:
         provider_name = "NVIDIA Llama 3.1"
+        # 1. IMMEDIATE HEARTBEAT (Resets Vercel timeout)
         yield json.dumps({"type": "trace", "message": f"Establishing secure G7 telemetry tunnel ({provider_name})..."}) + "\n"
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.05)
         
+        # 2. HEARTBEAT PULSE
+        yield json.dumps({"type": "trace", "message": "Synchronizing forensic nodes..."}) + "\n"
+
         # If PDF text is provided, use it for context
         eff_claim = claim
         if pdf_text and len(claim) < 10:
@@ -46,21 +50,32 @@ async def analyze_claim_stream(claim: str, pdf_text: str = None):
             yield json.dumps({"type": "trace", "message": "PDF content detected. Extracting forensic anchors..."}) + "\n"
 
         queries = generate_optimized_queries(eff_claim)
+        
+        # 3. PARALLEL SEARCH (Parallel is 3x faster than sequential)
+        yield json.dumps({"type": "trace", "message": "Engaging parallel telemetry sweep..."}) + "\n"
+        
+        async def fetch_one(q):
+            return await asyncio.to_thread(live_search_sync, q)
+
+        # Run all searches concurrently to beat the 10s clock
+        search_tasks = [fetch_one(q) for q in queries]
+        search_results_lists = await asyncio.gather(*search_tasks)
+        
         all_results = []
-        for q in queries:
-            yield json.dumps({"type": "search", "message": f"Browsing: {q}"}) + "\n"
-            results = await asyncio.to_thread(live_search_sync, q)
-            
+        for i, results in enumerate(search_results_lists):
+            query = queries[i]
             for r in results[:2]:
                 title = r.get('title', 'Unknown Source')
                 url = r.get('href', 'N/A')
                 yield json.dumps({"type": "link", "message": f"Inspecting: {title}", "url": url}) + "\n"
-            all_results.extend(results[:4])
-        
+            all_results.extend(results)
+
         context = "\n".join([f"Title: {r.get('title')}\nSnippet: {r.get('body') or r.get('snippet') or r.get('href')}" 
                            for r in all_results[:10]])
         if pdf_text:
             context = f"PRIMARY DOCUMENT CONTENT:\n{pdf_text[:3000]}\n\nLIVE SEARCH TELEMETRY:\n{context}"
+        
+        yield json.dumps({"type": "trace", "message": "Sweep complete. Synthesizing results..."}) + "\n"
     except Exception as e:
         yield json.dumps({"type": "error", "message": f"Telemetry drop: {str(e)}"}) + "\n"
         context = "Live search unavailable."
