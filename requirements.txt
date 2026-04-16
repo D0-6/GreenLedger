@@ -1,14 +1,5 @@
 fastapi
-uvicorn
 openai
 python-multipart
-pypdf
-jinja2
-playwright
 python-dotenv
-httpx
 psycopg2-binary
-psycopg2
-duckduckgo-search
-python-docx
-matplotlib
