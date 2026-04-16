@@ -3,3 +3,8 @@ openai
 python-multipart
 python-dotenv
 psycopg2-binary
+duckduckgo-search
+pypdf
+matplotlib
+python-docx
+jinja2

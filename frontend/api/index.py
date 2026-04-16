@@ -7,7 +7,11 @@ import pypdf
 import datetime
 
 # Import local modules from current api directory
-from . import db, ai, models
+try:
+    from . import db, ai, models, report, report_pdf, evidence
+except ImportError:
+    # Fallback for some local dev environments
+    import db, ai, models, report, report_pdf, evidence
 
 app = FastAPI(title="GreenLedger Vercel API")
 
@@ -70,9 +74,23 @@ def save_to_ledger(data: dict):
 
 @app.post("/api/generate-report")
 async def generate_report(request: models.ReportRequest):
-    # PDF generation currently disabled on Vercel due to Playwright size constraints
-    # For the hackathon demo, we return a 501 or a text summary
-    raise HTTPException(
-        status_code=501, 
-        detail="Institutional PDF Generation currently disabled in Vercel Serverless mode. Please use Web Dashboard for full results."
-    )
+    try:
+        if not request.claims:
+            raise HTTPException(status_code=400, detail="No audit data provided")
+            
+        # Robust selection of the primary audit data
+        primary_audit = request.claims[0]
+        audit_body = primary_audit.get('analysis') if isinstance(primary_audit, dict) and 'analysis' in primary_audit else primary_audit
+
+        # Word Document Generation (Very stable on Vercel)
+        word_buf = report.generate_word_report(request.claims)
+        
+        return StreamingResponse(
+            word_buf,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f"attachment; filename=GreenLedger_Audit_Report.docx"}
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
