@@ -1,6 +1,11 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "regions": ["sfo1"],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "api/index.py"
+    }
+  ],
   "cleanUrls": true
 }
