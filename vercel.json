@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "forensic_engine/index.py"
+      "destination": "api/index.py"
     }
   ],
   "cleanUrls": true
