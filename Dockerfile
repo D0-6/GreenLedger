@@ -18,5 +18,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend code
 COPY backend/ ./backend/
 
+# Set environment variables to ensure local imports work correctly
+ENV PYTHONPATH=/app/backend
+
 # Start command using the recommended list form for better signal handling
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8080"]
