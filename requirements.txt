@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+openai
+pydantic
+psycopg2-binary
+python-dotenv
+duckduckgo-search
+ddgs
+python-docx
+langchain-core
+matplotlib
