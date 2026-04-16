@@ -34,10 +34,12 @@ async def startup_event():
         print(f"⚠️ Database initialization skipped: {e}")
 
 @app.get("/api")
+@app.get("/")
 def read_root():
     return {"message": "GreenLedger Vercel API is operational"}
 
 @app.post("/api/analyze")
+@app.post("/analyze")
 def analyze(request: models.ClaimRequest):
     return StreamingResponse(
         ai.analyze_claim_stream(request.claim, request.pdf_text),
@@ -45,6 +47,7 @@ def analyze(request: models.ClaimRequest):
     )
 
 @app.post("/api/extract-pdf")
+@app.post("/extract-pdf")
 async def extract_pdf(file: UploadFile = File(...)):
     if not file.filename.endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
@@ -61,10 +64,12 @@ async def extract_pdf(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"PDF Extraction failed: {str(e)}")
 
 @app.get("/api/ledger")
+@app.get("/ledger")
 def get_ledger():
     return db.get_records()
 
 @app.post("/api/save-to-ledger")
+@app.post("/save-to-ledger")
 def save_to_ledger(data: dict):
     try:
         db.save_record(data)
@@ -73,6 +78,7 @@ def save_to_ledger(data: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/generate-report")
+@app.post("/generate-report")
 async def generate_report(request: models.ReportRequest):
     try:
         if not request.claims:
