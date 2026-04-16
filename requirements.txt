@@ -7,3 +7,5 @@ jinja2
 playwright
 python-dotenv
 httpx
+psycopg2-binary
+psycopg2旋v2旋
