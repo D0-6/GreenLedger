@@ -12,7 +12,10 @@ const THINKING_STAGES = [
   { msg: "Finalizing institutional audit verdict...", type: 'success' }
 ];
 
-const API_BASE_URL = "/api";
+// Dynamic API routing: Port 8000 locally, /api in production
+const API_BASE_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+  ? "http://localhost:8000" 
+  : "/api";
 
 export default function Home() {
   const [claimText, setClaimText] = useState("");

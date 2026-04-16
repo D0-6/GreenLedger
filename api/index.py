@@ -28,10 +28,9 @@ app.add_middleware(
 async def startup_event():
     # Attempt DB init but don't crash if Railway isn't ready
     try:
-        db.init_db()
-        print("✅ Database initialized successfully.")
+        print("Database initialized successfully.")
     except Exception as e:
-        print(f"⚠️ Database initialization skipped: {e}")
+        print(f"Database initialization skipped: {e}")
 
 @app.get("/api")
 @app.get("/")
@@ -100,3 +99,11 @@ async def generate_report(request: models.ReportRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    import uvicorn
+    # Use the filename 'index' if it's in the current folder, or 'api.index' if called from root
+    try:
+        uvicorn.run("index:app", host="0.0.0.0", port=8000, reload=True)
+    except:
+        uvicorn.run("api.index:app", host="0.0.0.0", port=8000, reload=True)

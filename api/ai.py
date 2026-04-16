@@ -35,10 +35,13 @@ def live_search_sync(query: str, max_results=4):
 async def analyze_claim_stream(claim: str, pdf_text: str = None):
     """Async Generator version optimized for Vercel 10s timeouts."""
     try:
-        provider_name = "NVIDIA Llama 3.1"
         # 1. IMMEDIATE HEARTBEAT (Resets Vercel timeout)
         yield json.dumps({"type": "trace", "message": f"Establishing secure G7 telemetry tunnel ({provider_name})..."}) + "\n"
         await asyncio.sleep(0.05)
+
+        if not NVIDIA_API_KEY:
+            yield json.dumps({"type": "error", "message": "Forensic telemetry lost: NVIDIA_API_KEY missing in Vercel Dashboard."}) + "\n"
+            return
         
         # 2. HEARTBEAT PULSE
         yield json.dumps({"type": "trace", "message": "Synchronizing forensic nodes..."}) + "\n"
