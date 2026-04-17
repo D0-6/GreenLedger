@@ -6,6 +6,5 @@
       "destination": "/api/index.py"
     }
   ],
-  "framework": "nextjs",
-  "installCommand": "pnpm install && playwright install chromium"
+  "framework": "nextjs"
 }
