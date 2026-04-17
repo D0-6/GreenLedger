@@ -28,6 +28,7 @@ app.add_middleware(
 async def startup_event():
     # Attempt DB init but don't crash if Railway isn't ready
     try:
+        db.init_db()
         print("Database initialized successfully.")
     except Exception as e:
         print(f"Database initialization skipped: {e}")
@@ -42,7 +43,12 @@ def read_root():
 def analyze(request: models.ClaimRequest):
     return StreamingResponse(
         ai.analyze_claim_stream(request.claim, request.pdf_text),
-        media_type="text/event-stream"
+        media_type="text/event-stream",
+        headers={
+            "X-Accel-Buffering": "no",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive"
+        }
     )
 
 @app.post("/api/extract-pdf")
@@ -87,13 +93,44 @@ async def generate_report(request: models.ReportRequest):
         primary_audit = request.claims[0]
         audit_body = primary_audit.get('analysis') if isinstance(primary_audit, dict) and 'analysis' in primary_audit else primary_audit
 
-        # Word Document Generation (Very stable on Vercel)
-        word_buf = report.generate_word_report(request.claims)
+        # 1. Capture Forensic Evidence (Screenshots)
+        search_results = []
+        if isinstance(audit_body, dict):
+            search_results = audit_body.get('search_results', [])
         
+        # Fallback to top-level search_results if nested one is empty
+        if not search_results and isinstance(primary_audit, dict):
+            search_results = primary_audit.get('search_results', [])
+
+        screenshot_paths = []
+        if search_results:
+            print(f"DEBUG: Capturing evidence for {len(search_results)} sources...")
+            screenshot_paths = await evidence.capture_all_evidence(search_results)
+        
+        exhibits = []
+        for i, path in enumerate(screenshot_paths):
+            if i < len(search_results):
+                exhibits.append({
+                    "title": search_results[i].get('title', 'Unknown Source'),
+                    "url": search_results[i].get('href', 'N/A'),
+                    "summary": search_results[i].get('body', 'Source content analyzed for forensic consistency.'),
+                    "path": path
+                })
+
+        # 2. Generate Institutional PDF
+        pdf_path = await report_pdf.generate_institutional_pdf(audit_body, exhibits)
+        
+        if not pdf_path or not os.path.exists(pdf_path):
+            raise HTTPException(status_code=500, detail="Forensic PDF Synthesis Failed.")
+
+        def iter_file():
+            with open(pdf_path, mode="rb") as f:
+                yield from f
+
         return StreamingResponse(
-            word_buf,
-            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            headers={"Content-Disposition": f"attachment; filename=GreenLedger_Audit_Report.docx"}
+            iter_file(),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename=GreenLedger_Audit_Report.pdf"}
         )
     except Exception as e:
         import traceback
@@ -102,8 +139,4 @@ async def generate_report(request: models.ReportRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    # Use the filename 'index' if it's in the current folder, or 'api.index' if called from root
-    try:
-        uvicorn.run("index:app", host="0.0.0.0", port=8000, reload=True)
-    except:
-        uvicorn.run("api.index:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

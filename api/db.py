@@ -2,6 +2,7 @@ import psycopg2
 import os
 from datetime import datetime
 import hashlib
+import json
 from dotenv import load_dotenv
 
 # Load local .env for development, Vercel will use dashboard env vars in production
@@ -28,6 +29,7 @@ def init_db():
         result TEXT NOT NULL,
         hash TEXT NOT NULL UNIQUE,
         risk_level TEXT,
+        search_results JSONB,
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
@@ -53,8 +55,8 @@ def save_record(data: dict):
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "INSERT INTO ledger (claim, result, hash, risk_level) VALUES (%s, %s, %s, %s) ON CONFLICT (hash) DO NOTHING",
-            (data['claim'], data.get('result', ''), hash_val, data.get('risk_level', 'UNKNOWN'))
+            "INSERT INTO ledger (claim, result, hash, risk_level, search_results) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (hash) DO UPDATE SET search_results = EXCLUDED.search_results",
+            (data['claim'], data.get('result', ''), hash_val, data.get('risk_level', 'UNKNOWN'), json.dumps(data.get('search_results', [])))
         )
     finally:
         cursor.close()
@@ -73,7 +75,8 @@ def get_records():
                 "result": r[2],
                 "hash": r[3],
                 "risk_level": r[4],
-                "timestamp": r[5].isoformat() if r[5] else None
+                "search_results": r[5] if r[5] else [],
+                "timestamp": r[6].isoformat() if r[6] else None
             } for r in rows
         ]
     finally:

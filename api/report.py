@@ -5,8 +5,13 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from io import BytesIO
 from datetime import datetime
+import matplotlib
+import matplotlib.pyplot as plt
 import os
 import re
+
+# Ensure matplotlib runs headlessly
+matplotlib.use('Agg')
 
 # Design Tokens (Apple / Relayto inspired)
 ACCENT_BLUE = "0284c7"    # Institutional Blue
@@ -59,9 +64,6 @@ def add_institutional_rule(paragraph, color=ACCENT_BLUE, size="6"):
     top.set(qn('w:space'), "12")
 
 def create_minimalist_chart(score):
-    import matplotlib
-    import matplotlib.pyplot as plt
-    matplotlib.use('Agg')
     plt.style.use('default')
     fig, ax = plt.subplots(figsize=(3, 2))
     color = '#0ea5e9' if score < 40 else '#f59e0b' if score < 70 else '#ef4444'

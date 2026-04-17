@@ -12,10 +12,7 @@ const THINKING_STAGES = [
   { msg: "Finalizing institutional audit verdict...", type: 'success' }
 ];
 
-// Dynamic API routing: Port 8000 locally, /api in production
-const API_BASE_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
-  ? "http://localhost:8000" 
-  : "/api";
+const API_BASE_URL = "/api";
 
 export default function Home() {
   const [claimText, setClaimText] = useState("");
@@ -33,6 +30,10 @@ export default function Home() {
   const [uploadedPdfName, setUploadedPdfName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // PDF Generation Progress State
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   // Toggle Theme
   useEffect(() => {
@@ -143,13 +144,32 @@ export default function Home() {
 
   const handleDownloadReport = async () => {
     if (!analysisResult) return;
+    
+    setIsDownloading(true);
+    setDownloadProgress(0);
+    
+    // Simulate kinetic progress curve (approx 45-60s for V2 report)
+    const progressInterval = setInterval(() => {
+      setDownloadProgress(prev => {
+        if (prev < 40) return prev + 2; // Fast start
+        if (prev < 85) return prev + 0.5; // Steady sweep
+        if (prev < 98) return prev + 0.1; // Deep synthesis
+        return prev;
+      });
+    }, 200);
+
     const claimsToReport = auditSession.length > 0 ? auditSession : [{ claim: analysisResult.claim_text, analysis: analysisResult }];
     try {
+      addTrace("Synthesizing Institutional V2 Report...", 'info');
       const response = await fetch(`${API_BASE_URL}/generate-report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ claims: claimsToReport }),
       });
+      
+      setDownloadProgress(100);
+      clearInterval(progressInterval);
+      
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -158,7 +178,18 @@ export default function Home() {
       document.body.appendChild(a);
       a.click();
       a.remove();
-    } catch (e) { console.error(e); }
+      
+      addTrace("Report successfully exported to local storage.", 'success');
+    } catch (e) { 
+      console.error(e); 
+      addTrace("Export failure: Network drop during PDF synthesis.", 'warning');
+      clearInterval(progressInterval);
+    } finally {
+      setTimeout(() => {
+        setIsDownloading(false);
+        setDownloadProgress(0);
+      }, 1000);
+    }
   };
 
   return (
@@ -210,17 +241,46 @@ export default function Home() {
               </p>
               
               <div className="flex flex-col gap-3">
+                {isDownloading && (
+                  <div className="mb-2 animate-in fade-in zoom-in duration-300">
+                    <div className="flex justify-between items-center mb-1.5 px-1">
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-primary">Synthesizing Exhibit V2</span>
+                      <span className="text-[9px] font-bold text-on-surface">{Math.round(downloadProgress)}%</span>
+                    </div>
+                    <div className="w-full h-1 bg-outline/10 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary transition-all duration-300 ease-out shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]" 
+                        style={{ width: `${downloadProgress}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-[8px] text-outline mt-1.5 italic">Capturing high-resolution telemetry exhibits...</p>
+                  </div>
+                )}
+
                 <button 
                   onClick={() => setAuditSession([...auditSession, { claim: analysisResult.claim_text, analysis: analysisResult }])}
-                  className="w-full py-3 bg-surface-container-high border border-outline/20 text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-surface-bright transition-colors text-on-surface"
+                  className="w-full py-3 bg-surface-container-high border border-outline/20 text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-surface-bright transition-colors text-on-surface disabled:opacity-50"
+                  disabled={isDownloading}
                 >
                   Add to Audit Folder ({auditSession.length})
                 </button>
                 <button 
                   onClick={handleDownloadReport}
-                  className="w-full py-3 bg-primary text-on-primary text-[10px] font-bold uppercase tracking-widest rounded-xl hover:opacity-90 shadow-lg shadow-primary/20 transition-all"
+                  disabled={isDownloading}
+                  className={`w-full py-3 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all relative overflow-hidden ${
+                    isDownloading 
+                    ? 'bg-surface-bright text-outline cursor-wait border border-outline/20' 
+                    : 'bg-primary text-on-primary hover:opacity-90 shadow-lg shadow-primary/20'
+                  }`}
                 >
-                  Export Institutional Report
+                  {isDownloading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      <span>Synthesizing...</span>
+                    </div>
+                  ) : (
+                    "Export Institutional Report"
+                  )}
                 </button>
               </div>
             </div>

@@ -1,6 +1,5 @@
-# Institutional Build Refresh - Python 3.11
-# Use Python 3.11 slim as base
-FROM python:3.11-slim
+# Use Python 3.10 slim as base
+FROM python:3.10-slim
 
 # Set working directory
 WORKDIR /app
@@ -18,8 +17,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend code
 COPY backend/ ./backend/
 
-# Set environment variables to ensure local imports work correctly
+# Set environment variables
 ENV PYTHONPATH=/app/backend
+ENV PORT=8000
 
-# Start command using the recommended list form for better signal handling
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8080"]
+# Expose port
+EXPOSE 8000
+
+# Start command
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

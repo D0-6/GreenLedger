@@ -14,13 +14,16 @@ client = AsyncOpenAI(
     base_url="https://integrate.api.nvidia.com/v1",
     api_key=NVIDIA_API_KEY
 )
-LLM_MODEL = "meta/llama-3.1-70b-instruct"
+LLM_MODEL = "meta/llama-4-maverick-17b-128e-instruct"
 
 def generate_optimized_queries(claim: str):
     return [
         f"{claim} 2025 OR 2026",
-        f"{claim} greenwashing OR emissions increased OR Scope 3 missing OR regulatory fine 2025 OR 2026",
-        f"{claim} CSRD OR SEC climate disclosure 2026"
+        f"{claim} greenwashing OR emissions transparency OR regulatory non-compliance 2025",
+        f"{claim} CSRD disclosure OR ISSB sustainability standards 2026",
+        f"{claim} SEC climate reporting OR ESMA ESG enforcement",
+        f"{claim} supply chain forced labor OR scope 3 emissions gaps",
+        f"{claim} carbon credits double counting OR offset verification 2025"
     ]
 
 def live_search_sync(query: str, max_results=4):
@@ -35,13 +38,10 @@ def live_search_sync(query: str, max_results=4):
 async def analyze_claim_stream(claim: str, pdf_text: str = None):
     """Async Generator version optimized for Vercel 10s timeouts."""
     try:
+        provider_name = "NVIDIA Llama 3.1"
         # 1. IMMEDIATE HEARTBEAT (Resets Vercel timeout)
         yield json.dumps({"type": "trace", "message": f"Establishing secure G7 telemetry tunnel ({provider_name})..."}) + "\n"
         await asyncio.sleep(0.05)
-
-        if not NVIDIA_API_KEY:
-            yield json.dumps({"type": "error", "message": "Forensic telemetry lost: NVIDIA_API_KEY missing in Vercel Dashboard."}) + "\n"
-            return
         
         # 2. HEARTBEAT PULSE
         yield json.dumps({"type": "trace", "message": "Synchronizing forensic nodes..."}) + "\n"
@@ -112,7 +112,20 @@ STRICT OUTPUT FORMAT (9-Point Audit Structure):
 [2-3 paragraphs of deep narrative-driven forensic synthesis. Reference sources.]
 
 **Conclusion:**
-[Final institutional verdict and technical justification.]
+[Final institutional verdict and technical justification. MUST NOT contain markdown tags like ** or *. Tone: Peer-reviewed, academic, and authoritative.]
+
+**Verification Traceability Map:**
+- [Claim Point]: [Exhibit Title] (Direct anchor to telemetry)
+
+**Regulatory Compliance Gap Analysis:**
+- [Standard/Article]: [Identification of specific discrepancy or alignment]
+(List 3 technical gaps or alignments)
+
+**Institutional Challenge Inquiries:**
+- [Technical Question]: [The underlying data discrepancy that prompts this question]
+(List 3-4 specific inquiry anchors for the company)
+
+**Forensic Confidence Score:** [Low|Medium|High] - [X]% based on telemetry density.
 
 **Evidence Exhibit Logs:**
 - [Source Title]: [Findings]

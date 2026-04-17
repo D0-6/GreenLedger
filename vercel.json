@@ -2,9 +2,10 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "api/index.py"
+      "source": "/api/:path*",
+      "destination": "/api/index.py"
     }
   ],
-  "cleanUrls": true
+  "framework": "nextjs",
+  "installCommand": "pnpm install && playwright install chromium"
 }
