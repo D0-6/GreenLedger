@@ -33,20 +33,6 @@ async def startup_event():
     except Exception as e:
         print(f"Database initialization skipped: {e}")
 
-    # Install Playwright Chromium browsers if not already present (Vercel serverless)
-    try:
-        import subprocess, sys
-        result = subprocess.run(
-            [sys.executable, "-m", "playwright", "install", "chromium"],
-            capture_output=True, text=True, timeout=120
-        )
-        if result.returncode == 0:
-            print("Playwright Chromium installed successfully.")
-        else:
-            print(f"Playwright install skipped: {result.stderr[:200]}")
-    except Exception as e:
-        print(f"Playwright browser setup skipped: {e}")
-
 @app.get("/api")
 @app.get("/")
 def read_root():
@@ -119,17 +105,22 @@ async def generate_report(request: models.ReportRequest):
         screenshot_paths = []
         if search_results:
             print(f"DEBUG: Capturing evidence for {len(search_results)} sources...")
-            screenshot_paths = await evidence.capture_all_evidence(search_results)
+            try:
+                screenshot_paths = await evidence.capture_all_evidence(search_results)
+            except Exception as e:
+                print(f"WARNING: Vercel Playwright capture failed ({e}). Proceeding with text-only exhibits.")
+                screenshot_paths = [] # Graceful fallback
         
         exhibits = []
-        for i, path in enumerate(screenshot_paths):
-            if i < len(search_results):
-                exhibits.append({
-                    "title": search_results[i].get('title', 'Unknown Source'),
-                    "url": search_results[i].get('href', 'N/A'),
-                    "summary": search_results[i].get('body', 'Source content analyzed for forensic consistency.'),
-                    "path": path
-                })
+        for i, res in enumerate(search_results):
+            path = screenshot_paths[i] if i < len(screenshot_paths) else None
+            exhibits.append({
+                "title": res.get('title', 'Unknown Source'),
+                "url": res.get('href', 'N/A'),
+                "summary": res.get('body', 'Source content analyzed for forensic consistency.'),
+                "path": path
+            })
+
 
         # 2. Generate Institutional PDF
         pdf_path = await report_pdf.generate_institutional_pdf(audit_body, exhibits)
