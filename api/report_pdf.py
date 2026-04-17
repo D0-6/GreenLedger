@@ -569,8 +569,8 @@ async def generate_institutional_pdf(audit_data: dict, screenshots: list):
             # Use high-speed rendering
             await page.set_content(html_content, wait_until="load")
             
-            # Determine suitable temp path (using a local reports folder for stability)
-            temp_dir = os.path.join(os.path.dirname(__file__), "reports")
+            # Enforce execution in Vercel's writable /tmp directory
+            temp_dir = "/tmp/reports"
             os.makedirs(temp_dir, exist_ok=True)
             pdf_path = os.path.join(temp_dir, f"audit_{template_data['report_id']}.pdf")
             

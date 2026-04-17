@@ -10,8 +10,8 @@ try:
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
 
-# Use forensic_cache relative to the api directory for consistency
-CACHE_DIR = os.path.join(os.path.dirname(__file__), "forensic_cache")
+# Use Vercel's writable /tmp directory for serverless consistency
+CACHE_DIR = "/tmp/forensic_cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 async def capture_source_screenshot(url: str, browser=None):
