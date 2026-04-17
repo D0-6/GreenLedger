@@ -33,6 +33,20 @@ async def startup_event():
     except Exception as e:
         print(f"Database initialization skipped: {e}")
 
+    # Install Playwright Chromium browsers if not already present (Vercel serverless)
+    try:
+        import subprocess, sys
+        result = subprocess.run(
+            [sys.executable, "-m", "playwright", "install", "chromium"],
+            capture_output=True, text=True, timeout=120
+        )
+        if result.returncode == 0:
+            print("Playwright Chromium installed successfully.")
+        else:
+            print(f"Playwright install skipped: {result.stderr[:200]}")
+    except Exception as e:
+        print(f"Playwright browser setup skipped: {e}")
+
 @app.get("/api")
 @app.get("/")
 def read_root():
