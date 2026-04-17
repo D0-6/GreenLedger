@@ -6,12 +6,5 @@
       "destination": "/api/index.py"
     }
   ],
-  "framework": "nextjs",
-  "functions": {
-    "api/index.py": {
-      "runtime": "python3.12",
-      "maxDuration": 60,
-      "memory": 1024
-    }
-  }
+  "framework": "nextjs"
 }
