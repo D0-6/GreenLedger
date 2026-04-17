@@ -13,3 +13,4 @@ pydantic-settings==2.12.0
 asyncio
 aiohttp
 requests
+psycopg2-binary==2.9.9
