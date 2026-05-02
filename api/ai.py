@@ -1,20 +1,19 @@
 import os
 import json
 import asyncio
-import hashlib
-from openai import AsyncOpenAI
+from google import genai
+from google.genai import types
 from duckduckgo_search import DDGS
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# NVIDIA NIM Configuration (Llama 3.1)
-NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY")
-client = AsyncOpenAI(
-    base_url="https://integrate.api.nvidia.com/v1",
-    api_key=NVIDIA_API_KEY
-)
-LLM_MODEL = "meta/llama-4-maverick-17b-128e-instruct"
+# Google Gemini Configuration
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+client = genai.Client(api_key=GEMINI_API_KEY)
+
+# Use Gemini 2.5 Flash for high-speed serverless reasoning
+LLM_MODEL = "gemini-2.5-flash"
 
 def generate_optimized_queries(claim: str):
     return [
@@ -28,7 +27,6 @@ def generate_optimized_queries(claim: str):
 
 def live_search_sync(query: str, max_results=4):
     try:
-        # DDGS sometimes needs higher timeouts in serverless environments
         with DDGS() as ddgs:
             return list(ddgs.text(query, max_results=max_results))
     except Exception as e:
@@ -38,15 +36,15 @@ def live_search_sync(query: str, max_results=4):
 async def analyze_claim_stream(claim: str, pdf_text: str = None):
     """Async Generator version optimized for Vercel 10s timeouts."""
     try:
-        provider_name = "NVIDIA Llama 3.1"
+        provider_name = "Google Gemini"
+        
         # 1. IMMEDIATE HEARTBEAT (Resets Vercel timeout)
-        yield json.dumps({"type": "trace", "message": f"Establishing secure G7 telemetry tunnel ({provider_name})..."}) + "\n"
+        yield json.dumps({"type": "trace", "message": f"Establishing secure telemetry tunnel ({provider_name})..."}) + "\n"
         await asyncio.sleep(0.05)
         
         # 2. HEARTBEAT PULSE
         yield json.dumps({"type": "trace", "message": "Synchronizing forensic nodes..."}) + "\n"
 
-        # If PDF text is provided, use it for context
         eff_claim = claim
         if pdf_text and len(claim) < 10:
             eff_claim = f"Verification of report content: {pdf_text[:100]}"
@@ -54,13 +52,12 @@ async def analyze_claim_stream(claim: str, pdf_text: str = None):
 
         queries = generate_optimized_queries(eff_claim)
         
-        # 3. PARALLEL SEARCH (Parallel is 3x faster than sequential)
+        # 3. PARALLEL SEARCH
         yield json.dumps({"type": "trace", "message": "Engaging parallel telemetry sweep..."}) + "\n"
         
         async def fetch_one(q):
             return await asyncio.to_thread(live_search_sync, q)
 
-        # Run all searches concurrently to beat the 10s clock
         search_tasks = [fetch_one(q) for q in queries]
         search_results_lists = await asyncio.gather(*search_tasks)
         
@@ -83,78 +80,91 @@ async def analyze_claim_stream(claim: str, pdf_text: str = None):
         yield json.dumps({"type": "error", "message": f"Telemetry drop: {str(e)}"}) + "\n"
         context = "Live search unavailable."
 
-    # Institutional 9-Point Prompt
+    # Gemini-Optimized Prompt System
+    system_instruction = """
+    You are GreenLedger AI, a lead forensic ESG auditor with 15+ years of experience in corporate sustainability compliance (CSRD, ISSB, SEC). 
+    Your role is to detect greenwashing, assess regulatory gaps, and provide a definitive risk score.
+    Maintain a strictly impartial, academic, and authoritative tone. No markdown bullet points in the abstract/summary sections.
+    """
+    
     prompt = f"""
-You are GreenLedger AI, a lead forensic ESG auditor with 15+ years of experience in corporate sustainability compliance (CSRD, ISSB, SEC). 
+    Analyze the following ESG claim against the provided telemetry data.
+    
+    <input_claim>
+    {claim}
+    </input_claim>
+    
+    {"<pdf_report>\n" + pdf_text[:2000] + "\n</pdf_report>\n" if pdf_text else ""}
+    
+    <telemetry_context>
+    {context}
+    </telemetry_context>
 
-STRICT OUTPUT FORMAT (9-Point Audit Structure):
-**Risk Score:** [0-100]/100
-**Forensic Verdict:** [REJECTED | ACCEPTED | SUBSTANTIATED RISK]
+    STRICT OUTPUT FORMAT REQUIRED. You MUST format your response EXACTLY like this template:
 
-**Executive Summary:**
-[A high-level institutional abstract of the audit finding. No bullets.]
+    **Risk Score:** [0-100]/100
+    **Forensic Verdict:** [REJECTED | ACCEPTED | SUBSTANTIATED RISK]
 
-**Claim Summary:**
-[Technical description of the statement under audit.]
+    **Executive Summary:**
+    [A high-level institutional abstract of the audit finding. No bullets.]
 
-**Forensic Credibility Matrix:**
-- [Criterion]: [PASS|FAIL|PARTIAL] - [Brief reason]
-(List 5 items)
+    **Claim Summary:**
+    [Technical description of the statement under audit.]
 
-**Risk Methodology Breakdown:**
-- [Component]: [X]% weighting
-(List 3 components)
+    **Forensic Credibility Matrix:**
+    - [Criterion 1]: [PASS|FAIL|PARTIAL] - [Brief reason]
+    - [Criterion 2]: [PASS|FAIL|PARTIAL] - [Brief reason]
+    - [Criterion 3]: [PASS|FAIL|PARTIAL] - [Brief reason]
+    - [Criterion 4]: [PASS|FAIL|PARTIAL] - [Brief reason]
+    - [Criterion 5]: [PASS|FAIL|PARTIAL] - [Brief reason]
 
-**Key Issues:**
-- [Technical bullet points]
+    **Risk Methodology Breakdown:**
+    - [Component 1]: [X]% weighting
+    - [Component 2]: [Y]% weighting
+    - [Component 3]: [Z]% weighting
 
-**Explanation:**
-[2-3 paragraphs of deep narrative-driven forensic synthesis. Reference sources.]
+    **Key Issues:**
+    - [Technical bullet point 1]
+    - [Technical bullet point 2]
+    - [Technical bullet point 3]
 
-**Conclusion:**
-[Final institutional verdict and technical justification. MUST NOT contain markdown tags like ** or *. Tone: Peer-reviewed, academic, and authoritative.]
+    **Explanation:**
+    [2-3 paragraphs of deep narrative-driven forensic synthesis. Reference the telemetry context.]
 
-**Verification Traceability Map:**
-- [Claim Point]: [Exhibit Title] (Direct anchor to telemetry)
+    **Conclusion:**
+    [Final institutional verdict and technical justification.]
 
-**Regulatory Compliance Gap Analysis:**
-- [Standard/Article]: [Identification of specific discrepancy or alignment]
-(List 3 technical gaps or alignments)
+    **Verification Traceability Map:**
+    - [Claim Point]: [Exhibit Title] (Direct anchor to telemetry)
 
-**Institutional Challenge Inquiries:**
-- [Technical Question]: [The underlying data discrepancy that prompts this question]
-(List 3-4 specific inquiry anchors for the company)
+    **Regulatory Compliance Gap Analysis:**
+    - [Standard/Article]: [Identification of specific discrepancy or alignment]
+    - [Standard/Article]: [Identification of specific discrepancy or alignment]
 
-**Forensic Confidence Score:** [Low|Medium|High] - [X]% based on telemetry density.
+    **Institutional Challenge Inquiries:**
+    - [Technical Question]: [The underlying data discrepancy that prompts this question]
 
-**Evidence Exhibit Logs:**
-- [Source Title]: [Findings]
-
-### THE RELAYTO PROTOCOL:
-- NO BULLET POINTS in 'Executive Summary', 'Explanation', or 'Conclusion'.
-- Maintain a strictly impartial, academic, and authoritative tone.
-
-Analyze:
-Claim: {claim}
-{"Report Content: " + pdf_text[:2000] if pdf_text else ""}
-Context: {context}
-"""
+    **Forensic Confidence Score:** [Low|Medium|High] - [X]% based on telemetry density.
+    """
 
     try:
         yield json.dumps({"type": "trace", "message": f"Applying {provider_name} Forensic Synthesis..."}) + "\n"
         
-        response = await client.chat.completions.create(
+        # Stream response from Gemini using aio
+        response_stream = await client.aio.models.generate_content_stream(
             model=LLM_MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.0,
-            max_tokens=1500,
-            stream=True
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                temperature=0.0,
+                max_output_tokens=1500,
+            )
         )
         
         full_text = ""
-        async for chunk in response:
-            if chunk.choices[0].delta.content:
-                full_text += chunk.choices[0].delta.content
+        async for chunk in response_stream:
+            if chunk.text:
+                full_text += chunk.text
 
         # Robust Parsing
         risk_level = "UNKNOWN"

@@ -9,6 +9,16 @@ const nextConfig: NextConfig = {
     // Still type-check but don't fail the build on type errors for now
     ignoreBuildErrors: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        // Route all requests to the single Python Vercel Serverless Function entrypoint
+        destination: "/api/index",
+      },
+    ];
+  },
 };
+
 
 export default nextConfig;
