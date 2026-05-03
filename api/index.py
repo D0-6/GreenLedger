@@ -126,20 +126,13 @@ async def generate_report(request: models.ReportRequest):
             })
 
 
-        # 2. Generate Institutional PDF
-        pdf_path = await report_pdf.generate_institutional_pdf(audit_body, exhibits)
+        # Generate Institutional Word Document instead of PDF to bypass Vercel Serverless Chromium limits
+        doc_bio = report.generate_word_report(request.claims)
         
-        if not pdf_path or not os.path.exists(pdf_path):
-            raise HTTPException(status_code=500, detail="Forensic PDF Synthesis Failed.")
-
-        def iter_file():
-            with open(pdf_path, mode="rb") as f:
-                yield from f
-
         return StreamingResponse(
-            iter_file(),
-            media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename=GreenLedger_Audit_Report.pdf"}
+            doc_bio,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": "attachment; filename=GreenLedger_Audit_Report.docx"}
         )
     except Exception as e:
         import traceback
