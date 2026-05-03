@@ -85,24 +85,38 @@ def create_minimalist_chart(score):
 
 def parse_analysis_v2(text):
     """Robust institutional parser for the new high-narrative system prompt."""
-    sections = {
-        "summary": "N/A", "issues": "No identifying risks.", "explanation": "Pending audit.",
-        "evidence": "No trace data.", "verdict": "Posturing.", "suggestions": "Review standard DISCO."
-    }
-    parts = {
-        "summary": "Claim Summary:", "issues": "Key Issues:", "explanation": "Explanation:",
-        "evidence": "Evidence & Proof:", "verdict": "Overall Verdict:", "suggestions": "Suggestions for Institutional Improvement:"
-    }
-    content_list = list(parts.items())
-    for i in range(len(content_list)):
-        key, header = content_list[i]
+    sections = {}
+    
+    # Ordered list of headers expected from Gemini
+    headers = [
+        ("summary", "Executive Summary:"),
+        ("claim_summary", "Claim Summary:"),
+        ("matrix", "Forensic Credibility Matrix:"),
+        ("methodology", "Risk Methodology Breakdown:"),
+        ("issues", "Key Issues:"),
+        ("explanation", "Explanation:"),
+        ("verdict", "Conclusion:"),
+        ("evidence", "Verification Traceability Map:"),
+        ("gaps", "Regulatory Compliance Gap Analysis:"),
+        ("suggestions", "Institutional Challenge Inquiries:"),
+        ("confidence", "Forensic Confidence Score:")
+    ]
+    
+    for i in range(len(headers)):
+        key, header = headers[i]
         if header in text:
             start = text.find(header) + len(header)
             end = len(text)
-            if i + 1 < len(content_list):
-                next_header = content_list[i+1][1]
-                if next_header in text: end = text.find(next_header)
+            # Find the next header that exists in the text
+            for j in range(i + 1, len(headers)):
+                _, next_header = headers[j]
+                if next_header in text:
+                    end = text.find(next_header)
+                    break
             sections[key] = clean_relayto_text(text[start:end].strip())
+        else:
+            sections[key] = "Not provided in this audit sweep."
+            
     return sections
 
 def add_cover(doc):
@@ -175,13 +189,16 @@ def add_claim_section(doc, item):
     analysis = item.get('analysis', {})
     sections = parse_analysis_v2(analysis.get("analysis", ""))
     risk_score = analysis.get("risk_score", 50)
+    
+    # Live Search Sources
+    search_results = analysis.get('search_results', [])
 
-    h1 = doc.add_heading(claim[:45] + "...", level=1)
+    h1 = doc.add_heading(claim[:80] + "...", level=1)
     add_institutional_rule(h1)
     
     # Summary Highlight
     p = doc.add_paragraph()
-    run = p.add_run(sections['summary'])
+    run = p.add_run(sections.get('summary', ''))
     run.font.size = Pt(14)
     run.font.italic = True
     run.font.color.rgb = RGBColor.from_string(ACCENT_BLUE)
@@ -198,20 +215,39 @@ def add_claim_section(doc, item):
     left.add_run().add_picture(chart, width=Inches(1.8))
     
     right = grid.cell(0, 1).paragraphs[0]
-    right.add_run("Forensic Narrative\n").font.size = Pt(11)
-    right.add_run(sections['explanation']).font.size = Pt(10)
+    right.add_run("Forensic Narrative\n").font.size = Pt(11).bold = True
+    right.add_run(sections.get('explanation', '')).font.size = Pt(10)
 
     # Verdict Box
     doc.add_paragraph()
-    v_head = doc.add_heading("Final Verdict", level=2)
-    doc.add_paragraph(sections['verdict'])
+    doc.add_heading("Final Conclusion & Verdict", level=2)
+    doc.add_paragraph(sections.get('verdict', ''))
 
+    # Evidence & Proofs (Traceability)
+    doc.add_heading("Verification Traceability Map (Proofs)", level=2)
+    doc.add_paragraph(sections.get('evidence', ''))
+    
     # Gaps & Institutional recommendations
-    doc.add_heading("Identified Institutional Gaps", level=2)
-    doc.add_paragraph(sections['issues'])
+    doc.add_heading("Identified Institutional Gaps & Issues", level=2)
+    doc.add_paragraph(sections.get('issues', ''))
+    
+    doc.add_heading("Regulatory Compliance Gap Analysis", level=2)
+    doc.add_paragraph(sections.get('gaps', ''))
 
-    doc.add_heading("Strategic Recommendations", level=2)
-    doc.add_paragraph(sections['suggestions'])
+    doc.add_heading("Institutional Challenge Inquiries", level=2)
+    doc.add_paragraph(sections.get('suggestions', ''))
+    
+    # Append Telemetry Links/Sources
+    if search_results:
+        doc.add_heading("Verified Telemetry Sources & Links", level=2)
+        for res in search_results[:5]:
+            title = res.get('title', 'Unknown Source')
+            href = res.get('href', 'No URL available')
+            p_source = doc.add_paragraph()
+            p_source.add_run(f"• {title}\n").bold = True
+            run_link = p_source.add_run(f"  {href}")
+            run_link.font.color.rgb = RGBColor.from_string("0000FF")
+            run_link.font.underline = True
 
     doc.add_page_break()
 
