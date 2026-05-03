@@ -151,7 +151,7 @@ async def analyze_claim_stream(claim: str, pdf_text: str = None):
         yield json.dumps({"type": "trace", "message": f"Applying {provider_name} Forensic Synthesis..."}) + "\n"
         
         # Stream response from Gemini using aio
-        response_stream = await client.aio.models.generate_content_stream(
+        response_stream = client.aio.models.generate_content_stream(
             model=LLM_MODEL,
             contents=prompt,
             config=types.GenerateContentConfig(
