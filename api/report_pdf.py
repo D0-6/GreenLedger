@@ -580,3 +580,48 @@ async def generate_institutional_pdf(audit_data: dict, screenshots: list):
         except Exception as e:
             print(f"PDF Render Error: {e}")
             return None
+
+def generate_institutional_html(audit_data: dict, screenshots: list):
+    """Generates the raw, stunning HTML report as a BytesIO object for direct download."""
+    raw_analysis = audit_data.get('analysis', '') if isinstance(audit_data, dict) else str(audit_data)
+    matrix, exec_summary, conclusion, key_issues, explanation, exhibit_logs, traceability, reg_gaps, challenge_questions, confidence_score = parse_forensic_data(raw_analysis)
+    
+    exhibits = []
+    for s in screenshots:
+        if isinstance(s, dict):
+            path = s.get('path')
+            b64 = image_to_base64(path)
+            exhibits.append({
+                "title": s.get('title', 'Unknown Source'),
+                "url": s.get('url', 'N/A'),
+                "summary": s.get('summary', 'Telemetry capture of institutional source.'),
+                "base64": b64
+            })
+    
+    template_data = {
+        "report_id": f"GL-{datetime.datetime.now().strftime('%Y%j%H%M')}",
+        "timestamp": datetime.datetime.now().strftime("%B %d, %Y | %H:%M UTC"),
+        "claim_text": audit_data.get('claim_text', 'Technical ESG Statement'),
+        "verdict": audit_data.get('verdict', 'SUBSTANTIATED RISK'),
+        "risk_score": audit_data.get('risk_score', 50),
+        "exec_summary": exec_summary,
+        "matrix": matrix,
+        "key_issues": key_issues,
+        "conclusion": conclusion,
+        "explanation": explanation,
+        "exhibit_logs": exhibit_logs,
+        "traceability": traceability,
+        "reg_gaps": reg_gaps,
+        "challenge_questions": challenge_questions,
+        "confidence_score": confidence_score,
+        "exhibits": exhibits,
+        "signature": hashlib.sha256(raw_analysis.encode()).hexdigest().upper()
+    }
+
+    template = Template(HTML_TEMPLATE)
+    html_content = template.render(**template_data)
+    
+    bio = io.BytesIO()
+    bio.write(html_content.encode('utf-8'))
+    bio.seek(0)
+    return bio

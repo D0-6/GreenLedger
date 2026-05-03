@@ -174,7 +174,7 @@ export default function Home() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'GreenLedger_Audit_Report.docx';
+      a.download = 'GreenLedger_Audit_Report.html';
       document.body.appendChild(a);
       a.click();
       a.remove();

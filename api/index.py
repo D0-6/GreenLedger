@@ -126,13 +126,13 @@ async def generate_report(request: models.ReportRequest):
             })
 
 
-        # Generate Institutional Word Document instead of PDF to bypass Vercel Serverless Chromium limits
-        doc_bio = report.generate_word_report(request.claims)
+        # Generate Institutional HTML Report to unlock the stunning gradient design without crashing Playwright
+        html_bio = report_pdf.generate_institutional_html(audit_body, exhibits)
         
         return StreamingResponse(
-            doc_bio,
-            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            headers={"Content-Disposition": "attachment; filename=GreenLedger_Audit_Report.docx"}
+            html_bio,
+            media_type="text/html",
+            headers={"Content-Disposition": "attachment; filename=GreenLedger_Audit_Report.html"}
         )
     except Exception as e:
         import traceback
