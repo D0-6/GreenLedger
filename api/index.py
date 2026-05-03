@@ -8,10 +8,14 @@ import datetime
 
 # Import local modules from current api directory
 try:
-    from . import db, ai, models, report, report_pdf, evidence
-except ImportError:
-    # Fallback for some local dev environments
-    import db, ai, models, report, report_pdf, evidence
+    if __package__ is None or __package__ == "":
+        import db, ai, models, report, report_pdf, evidence
+    else:
+        from . import db, ai, models, report, report_pdf, evidence
+except Exception as e:
+    print(f"CRITICAL IMPORT ERROR: {e}")
+    raise e
+
 
 app = FastAPI(title="GreenLedger Vercel API")
 
